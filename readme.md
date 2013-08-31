@@ -5,6 +5,8 @@ So i have created something that does, its no more than a proof of concept for t
 
 I have quite a lot more to finish on this. So far it only replaces the methods of a class, no variables or anything.
 
+Tested in python 2.7.5 and 3.3.2.
+
 Current to-do list:
 
   * Try and detect imported modules and functions from those modules excluding them from reload.
