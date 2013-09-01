@@ -22,9 +22,8 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import sys
-import os
 
-from fileutil import load_source_file, get_path
+from fileutil import load_source_file
 
 def bind_method(previous, new, method):
     ''' Takes a method from one class and binds it to another '''

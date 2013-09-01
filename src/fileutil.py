@@ -23,10 +23,6 @@
 
 import os
 import sys
-import imp
-import importlib
-import fnmatch
-import time
 try:  # Python 3
     from importlib.machinery import SourceFileLoader
 except ImportError:  # Python 2
