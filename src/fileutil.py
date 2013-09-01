@@ -62,28 +62,3 @@ def load_source_file(pathName, name):
         load_source(name, pathName)
 
     return sys.modules[name]
-
-
-def file_listener(path, queue):
-    ''' check the filesystem if any times in the current path have changed.
-        Must use either multiprocessing or threading
-    '''
-    running = True
-    filesInfo = []
-    oldFilesInfo = None
-    while running:
-        time.sleep(0.05) # To reduce 
-
-        del oldFilesInfo
-        oldFilesInfo = filesInfo
-        filesInfo = []
-        for root, dirname, filenames in os.walk(path):
-            for fileName in fnmatch.filter(filenames, '*.py'):
-                filePath = os.sep.join((root, fileName))
-                filesInfo.append((filePath, os.path.getmtime(filePath)))
-        data = tuple(set(filesInfo) - set(oldFilesInfo))
-        if data and oldFilesInfo:
-            data = tuple(item[0] for item in data)
-            queue.put(data)
-        else:
-            del data

@@ -22,30 +22,21 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import sys
-from multiprocessing import Queue, Process
 
-from fileutil import file_listener, get_filename, get_path
-from moduletools import ModuleManager, diff
-
-
-def bind_method(previous, new, method):
-    ''' Takes a method from one class and binds it to another '''
-
-    boundMethod = getattr(previous, method).__get__(new, previous)
-    setattr(new, method, boundMethod)
+import filelistener
+from fileutil import get_filename, get_path
+from moduletools import ModuleManager, bind_method
 
 
 class HotReload(object):
     ''' Facilitates detecting and reloading of any python module located within
         the folder structure of the first launched script.
     '''
-    def __init__(self):
-        
-        filePath = get_path()
-        self.queue = Queue()
 
-        self.proc = Process(target=file_listener, args=(filePath, self.queue))
-        self.proc.start()
+    def __init__(self):
+
+        filePath = get_path()
+        self.fileListener = filelistener.FileListener(filePath)
 
     def reload_module(self, filePath):
         ''' Reload a python module '''
@@ -95,15 +86,11 @@ class HotReload(object):
         del sys.modules[nameTemp]
 
     def run(self):
-        ''' Run a check to see if any files have changed.
+        ''' Check with FileListener if any files have been modified.
             Required to be ran in the beginning of the main loop.
          '''
-
-        # Check if any file changes have been posted
-        try:
-            changedFiles = self.queue.get_nowait()
-        except:
-            changedFiles = None
+         
+        changedFiles = self.fileListener.check()
 
         # if they have 
         if changedFiles:

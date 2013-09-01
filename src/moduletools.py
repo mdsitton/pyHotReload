@@ -26,7 +26,13 @@ import os
 
 from fileutil import load_source_file, get_path
 
+def bind_method(previous, new, method):
+    ''' Takes a method from one class and binds it to another '''
+    boundMethod = getattr(previous, method).__get__(new, previous)
+    setattr(new, method, boundMethod)
+
 def diff(x, y):
+    ''' Return the differance between two tuples '''
     return tuple(set(x) - set(y))
 
 class ModuleManager(object):
