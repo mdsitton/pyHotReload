@@ -14,5 +14,4 @@ Current to-do list:
   * Do variable replacement.
   * Try to not always replace everything, be selective about it.
   * Add support for global variables, functions, and class variables.
-  * Re-structure the file change detection code into a class.
   * Ill think of more later :P
