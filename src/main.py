@@ -1,4 +1,4 @@
-﻿# Copyright (c) 2013, Matthew Sitton. 
+# Copyright (c) 2013, Matthew Sitton. 
 # All rights reserved.
 
 # Redistribution and use in source and binary forms, with or without
@@ -20,13 +20,17 @@
 # ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+''' This shows how to call and setup your program to use hotreload
+    Currently if you main loop is within a class or function the only
+    way to use it is to not reload that file at all.
+'''
 
-from hotreload import HotReload
-import mainclass
+import hotreload
+from mainclass import Testing
 
 if __name__ == '__main__':
-    main = mainclass.Testing()
-    hotReload = HotReload()
+    main = Testing()
+    hotReload = hotreload.HotReload()
     while True:
         hotReload.run()
         main.run()

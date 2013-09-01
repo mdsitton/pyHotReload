@@ -23,7 +23,7 @@
 
 import sys
 
-from fileutil import load_source_file
+from hotreload.fileutil import load_source_file
 
 def bind_method(previous, new, method):
     ''' Takes a method from one class and binds it to another '''

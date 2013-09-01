@@ -23,9 +23,9 @@
 
 import sys
 
-import filelistener
-from fileutil import get_filename, get_path
-from moduletools import ModuleManager, bind_method
+from hotreload.filelistener import FileListener
+from hotreload.fileutil import get_filename, get_path
+from hotreload.moduletools import ModuleManager, bind_method
 
 
 class HotReload(object):
@@ -36,7 +36,7 @@ class HotReload(object):
     def __init__(self):
 
         filePath = get_path()
-        self.fileListener = filelistener.FileListener(filePath)
+        self.fileListener = FileListener(filePath)
 
     def reload_module(self, filePath):
         ''' Reload a python module '''

@@ -1,4 +1,4 @@
-﻿# Copyright (c) 2013, Matthew Sitton. 
+# Copyright (c) 2013, Matthew Sitton. 
 # All rights reserved.
 
 # Redistribution and use in source and binary forms, with or without
@@ -22,6 +22,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 class Testing(object):
+    ''' This class is to test the hotreload functionality '''
     def __init__(self):
         print ('Liftoff! :D')
 
