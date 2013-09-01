@@ -69,14 +69,7 @@ class HotReload(object):
                      
                     if hasattr(classTempAttribObject, '__call__'):
                         bind_method(moduleTempAttribObject, moduleAttribObject, classTempAttib)
-
-                    if not hasattr(classTempAttribObject, '__call__'):
-                        print ('found {}'.format(classTempAttib))
-                    else:
-                        print ('found {} :D'.format(classTempAttib))
-
-                    if moduleTempAttrib == 'ModuleManager':
-                        print (classAttribObject)
+                    
             else: # Its a global variable
                 pass # Not Implemented
 
