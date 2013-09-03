@@ -26,7 +26,7 @@
 '''
 
 import hotreload
-from mainclass import Testing
+from testing import Testing
 
 if __name__ == '__main__':
     main = Testing()
