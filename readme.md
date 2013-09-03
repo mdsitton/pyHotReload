@@ -14,5 +14,5 @@ Current to-do list:
   * Try and detect imported modules and functions from those modules excluding them from reload. (partially, need from imports still)
   * Detect if a source file is within a package and do the right thing when changing it in sys.modules.
   * Try to not always replace everything, be selective about it.
-  * Add support for functions, and class variables.
+  * Add support for class variables.
   * Ill think of more later :P

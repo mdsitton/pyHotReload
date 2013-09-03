@@ -23,6 +23,10 @@
 
 globalvartest = False
 
+def test_function():
+    if globalvartest:
+        print (globalvartest)
+
 class Testing(object):
     ''' This class is to test the hotreload functionality '''
     def __init__(self):
@@ -31,3 +35,4 @@ class Testing(object):
     def run(self):
     	if globalvartest:
         	print (globalvartest)
+        test_function()
