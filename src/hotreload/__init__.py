@@ -48,6 +48,8 @@ class HotReload(object):
 
         # Load updated module
         nameTemp = name + '2'
+        if nameTemp in sys.modules.keys():
+            del sys.modules[nameTemp]
         moduleTemp = ModuleManager(filePath, name, nameTemp)
         moduleTempVars = vars(moduleTemp.instance)
 
@@ -76,7 +78,6 @@ class HotReload(object):
         # unload temp module
         del moduleTempVars
         del moduleTemp
-        del sys.modules[nameTemp]
 
     def run(self):
         ''' Check with FileListener if any files have been modified.
