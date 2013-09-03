@@ -48,6 +48,12 @@ class HotReload(object):
         moduleInstance = module.instance
         moduleVars = vars(moduleInstance)
 
+
+        # The following if statement is a hack to allow global variables to work.
+        # It keeps the temp module around until the next reload,
+        # because the original module now has small references to it.
+        # Deleting the module from sys.modules causes global variables to become None
+        # Inside methods swapped from the temp module, which is all of them.
         # Load updated module
         nameTemp = name + '2'
         if nameTemp in sys.modules.keys():
@@ -74,7 +80,7 @@ class HotReload(object):
                     if hasattr(classTempAttribObject, '__call__'):
                         bind_method(moduleTempAttribObject, moduleAttribObject, classTempAttib)
                     
-            else: # Its a global variable
+            else: # Its a global variable or function
 
                 # Skip imported module
                 if isinstance(moduleTempAttribObject, types.ModuleType):
@@ -86,7 +92,7 @@ class HotReload(object):
                 if moduleTempAttrib not in valuesNotChange:
                     setattr(moduleInstance, moduleTempAttrib, moduleTempAttribObject)
 
-        # unload temp module
+        # unload temp module container class keep the module in sys.modules
         del moduleTempVars
         del moduleTemp
 
