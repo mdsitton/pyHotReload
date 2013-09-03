@@ -21,10 +21,13 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+globalvartest = False
+
 class Testing(object):
     ''' This class is to test the hotreload functionality '''
     def __init__(self):
         print ('Liftoff! :D')
 
     def run(self):
-        pass#print ('test')
+    	if globalvartest:
+        	print (globalvartest)

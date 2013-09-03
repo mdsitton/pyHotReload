@@ -22,6 +22,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import sys
+import types
 
 from hotreload.filelistener import FileListener
 from hotreload.fileutil import get_filename, get_path
@@ -44,7 +45,8 @@ class HotReload(object):
         # Load main module
         name = get_filename(filePath)
         module = ModuleManager(filePath, name, name)
-        moduleVars = vars(module.instance)
+        moduleInstance = module.instance
+        moduleVars = vars(moduleInstance)
 
         # Load updated module
         nameTemp = name + '2'
@@ -73,7 +75,16 @@ class HotReload(object):
                         bind_method(moduleTempAttribObject, moduleAttribObject, classTempAttib)
                     
             else: # Its a global variable
-                pass # Not Implemented
+
+                # Skip imported module
+                if isinstance(moduleTempAttribObject, types.ModuleType):
+                    continue
+
+                # Verify that the variable isnt a builtin attribute
+                valuesNotChange = ('__name__', '__builtins__', '__file__', '__package__')
+
+                if moduleTempAttrib not in valuesNotChange:
+                    setattr(moduleInstance, moduleTempAttrib, moduleTempAttribObject)
 
         # unload temp module
         del moduleTempVars
