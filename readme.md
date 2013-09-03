@@ -11,9 +11,8 @@ Tested in python 2.7.5 and 3.3.2.
 
 Current to-do list:
 
-  * Try and detect imported modules and functions from those modules excluding them from reload.
+  * Try and detect imported modules and functions from those modules excluding them from reload. (partially, need from imports still)
   * Detect if a source file is within a package and do the right thing when changing it in sys.modules.
-  * Do variable replacement.
   * Try to not always replace everything, be selective about it.
-  * Add support for global variables, functions, and class variables.
+  * Add support for functions, and class variables.
   * Ill think of more later :P
