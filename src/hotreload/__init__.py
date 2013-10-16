@@ -25,7 +25,7 @@ import sys
 import types
 
 from hotreload.filelistener import FileListener
-from hotreload.fileutil import get_filename, get_path
+from hotreload.fileutil import get_filename, get_path, exec_
 from hotreload.moduletools import ModuleManager, bind_method
 
 
@@ -54,6 +54,13 @@ class HotReload(object):
 
         for moduleTempAttrib in list(moduleTempVars.keys()):  # Module Level
 
+            newModuleVar = False
+
+            if moduleTempAttrib not in moduleVars.keys():
+                setattr(moduleInstance, moduleTempAttrib, None)
+                moduleVars = vars(moduleInstance)
+                newModuleVar = True
+
             moduleAttribObject = moduleVars[moduleTempAttrib]
             moduleTempAttribObject = moduleTempVars[moduleTempAttrib]
 
@@ -65,12 +72,27 @@ class HotReload(object):
 
                 for classTempAttib in list(classTempVars.keys()): # Class Level
 
+                    newClassVar = False
+
+                    if classTempAttib not in classVars.keys():
+                        setattr(moduleAttribObject, classTempAttib, None)
+                        classVars = vars(moduleAttribObject)
+                        newClassVar = True
+
+
                     classAttribObject = classVars[classTempAttib]
                     classTempAttribObject = classTempVars[classTempAttib]
 
                     isCall = (hasattr(classTempAttribObject, '__call__') and hasattr(classTempAttribObject, '__code__'))
 
-                    if isCall:
+                    if newClassVar and isCall:
+                        code = 'def {}(self): pass'.format(classTempAttib)
+                        exec_(code, moduleInstance.__dict__, None)
+                        method = getattr(moduleInstance, classTempAttib)
+                        method.__code__ = classTempAttribObject.__code__
+                        setattr(moduleAttribObject, classTempAttib, method )
+                        delattr(moduleInstance, classTempAttib)
+                    elif isCall:
                         classAttribObject.__code__ = classTempAttribObject.__code__
                     elif newClassVar:
                         setattr(moduleAttribObject, classTempAttib, classTempAttribObject)
@@ -86,8 +108,11 @@ class HotReload(object):
 
                 if moduleTempAttrib not in valuesNotChange:
                     isCall = (hasattr(moduleTempAttribObject, '__call__') and hasattr(moduleTempAttribObject, '__code__'))
-
-                    if isCall:
+                    if newModuleVar and isCall:
+                        code = 'def {}(): pass'.format(moduleTempAttrib)
+                        exec_(code, moduleInstance.__dict__)
+                        moduleAttribObject.__code__ = moduleTempAttribObject.__code__
+                    elif isCall:
                         moduleAttribObject.__code__ = moduleTempAttribObject.__code__
                     elif newModuleVar:
                         setattr(moduleInstance, moduleTempAttrib, moduleTempAttribObject)

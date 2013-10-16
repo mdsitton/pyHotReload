@@ -58,3 +58,10 @@ def load_source_file(pathName, name):
         load_source(name, pathName)
 
     return sys.modules[name]
+
+def exec_(obj, glob, local=None):
+    ''' 2.x/3.x compatibility for exec function '''
+    try:
+        exec (obj in glob, local)
+    except TypeError:
+        exec(obj, glob, local)
