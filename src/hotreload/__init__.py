@@ -48,16 +48,7 @@ class HotReload(object):
         moduleInstance = module.instance
         moduleVars = vars(moduleInstance)
 
-
-        # The following if statement is a hack to allow global variables to work.
-        # It keeps the temp module around until the next reload,
-        # because the original module now has small references to it.
-        # Deleting the module from sys.modules causes global variables to become None
-        # Inside methods swapped from the temp module, which is all of them.
-        # Load updated module
         nameTemp = name + '2'
-        if nameTemp in sys.modules.keys():
-            del sys.modules[nameTemp]
         moduleTemp = ModuleManager(filePath, name, nameTemp)
         moduleTempVars = vars(moduleTemp.instance)
 
@@ -76,9 +67,13 @@ class HotReload(object):
 
                     classAttribObject = classVars[classTempAttib]
                     classTempAttribObject = classTempVars[classTempAttib]
-                     
-                    if hasattr(classTempAttribObject, '__call__'):
-                        bind_method(moduleTempAttribObject, moduleAttribObject, classTempAttib)
+
+                    isCall = (hasattr(classTempAttribObject, '__call__') and hasattr(classTempAttribObject, '__code__'))
+
+                    if isCall:
+                        classAttribObject.__code__ = classTempAttribObject.__code__
+                    elif newClassVar:
+                        setattr(moduleAttribObject, classTempAttib, classTempAttribObject)
                     
             else: # Its a global variable or function
 
@@ -90,11 +85,17 @@ class HotReload(object):
                 valuesNotChange = ('__name__', '__builtins__', '__file__', '__package__')
 
                 if moduleTempAttrib not in valuesNotChange:
-                    setattr(moduleInstance, moduleTempAttrib, moduleTempAttribObject)
+                    isCall = (hasattr(moduleTempAttribObject, '__call__') and hasattr(moduleTempAttribObject, '__code__'))
+
+                    if isCall:
+                        moduleAttribObject.__code__ = moduleTempAttribObject.__code__
+                    elif newModuleVar:
+                        setattr(moduleInstance, moduleTempAttrib, moduleTempAttribObject)
 
         # unload temp module container class keep the module in sys.modules
         del moduleTempVars
         del moduleTemp
+        del sys.modules[nameTemp]
 
     def run(self):
         ''' Check with FileListener if any files have been modified.

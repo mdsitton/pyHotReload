@@ -22,23 +22,26 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ''' This module is only for testing the hot reload functionality
-	its a place to try and break the code mainly.
+    its a place to try and break the code mainly.
 '''
 
 globalvartest = False
 
 def test_function():
-	''' This is to test if functions get reloaded correcly '''
+    ''' This is to test if functions get reloaded correcly '''
+
     if globalvartest:
         print (globalvartest)
 
 class Testing(object):
     ''' This class is to test the hotreload functionality '''
+
     def __init__(self):
         print ('Liftoff! :D')
 
     def run(self):
-    	''' This is a method in which to test hotreloading '''
-    	if globalvartest:
-        	print (globalvartest)
+        ''' This is a method in which to test hotreloading '''
+        global globalvartest
+        globalvartest = False
         test_function()
+ 
