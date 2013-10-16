@@ -1,18 +1,21 @@
-﻿I started this out of the want to be able to develop a program without having to restart it.
+﻿I started this project because i wanted to be able to develop on an application as its running.
+So i have created something that does, since it doesnt seem that anyone has done so in python.
 
-I messed with the reload function a bit and wasnt happy that it didnt automatically update the old instances.
-So i have created something that does, its no more than a proof of concept for the moment but it will get there.
+This is differant from reload() in a few ways. 
 
-I have quite a lot more to finish on this. So far it only replaces the methods of a class, no variables or anything.
+The reload built-in defines a new set of objects within sys.modules that replaces the old ones. It doesnt change any existing instances which are based on the old objects. The old objects will still be in memory until not refrenced anymore.
 
-WARNING: Please do not use this in any production code. It can possibly cause unforseen state issues, and bugs.
+Where as this loads a copy of the module into another name under sys.modules. A quick compairison is done between the original and new is done. Changed objects are then aystematically swapped out, or modified so they relect the differance found.
+
+In its current state, this could cause bugs in the reloaded module. If you come across something, please report it.
 
 Tested in python 2.7.5 and 3.3.2.
 
 Current to-do list:
 
-  * Try and detect imported modules and functions from those modules excluding them from reload. (partially, need from imports still)
-  * Detect if a source file is within a package and do the right thing when changing it in sys.modules.
-  * Try to not always replace everything, be selective about it.
-  * Add support for class variables.
-  * Ill think of more later :P
+  * Detect removed objects
+  * Support for new Classes definitions
+  * Package awareness
+  * Support for new imports
+  * Look into detecting renamed objects
+  * Find bugs
