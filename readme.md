@@ -14,7 +14,6 @@ Tested in python 2.7.5 and 3.3.2.
 Current to-do list:
 
   * Detect removed objects
-  * Support for new class definitions
   * Package awareness
   * Support for new imports
   * Look into detecting renamed objects
