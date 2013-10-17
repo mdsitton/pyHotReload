@@ -18,3 +18,5 @@ Current to-do list:
   * Support for new imports
   * Look into detecting renamed objects
   * Find bugs
+  * Make the code clearer, and easier to read.
+  * Better comment what is going on.
