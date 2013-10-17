@@ -67,6 +67,14 @@ class HotReload(object):
             # Is it a class?
             if isinstance(moduleTempAttribObject, type):
 
+                if newModuleVar:
+                    baseClasses = moduleTempAttribObject.__bases__
+                    newClass = type(moduleTempAttrib, baseClasses, {})
+                    setattr(moduleInstance, moduleTempAttrib, newClass)
+
+                    moduleVars = vars(moduleInstance)
+                    moduleAttribObject = moduleVars[moduleTempAttrib]
+
                 classVars = vars(moduleAttribObject)
                 classTempVars = vars(moduleTempAttribObject)
 
