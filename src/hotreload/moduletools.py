@@ -46,7 +46,3 @@ class ModuleManager(object):
             load_source_file(self.filePath, self.displayName)
 
         self.instance = sys.modules[self.displayName]
-
-    def __sub__(self, other):
-        ''' Determine difference between two versions of a module. '''
-        return diff(self.get_keys(), other.get_keys())
