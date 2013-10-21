@@ -28,13 +28,13 @@ from hotreload.fileutil import get_filename, get_path
 from hotreload.moduletools import ModuleManager, create_function
 
 
-exemptList = ('__name__', '__builtins__', '__file__', '__package__')
-
 def reload_module(filePath):
     ''' Reload a python module without replacing it '''
 
     newModuleVar = False
     newClassVar = False
+
+    exemptList = ('__name__', '__builtins__', '__file__', '__package__')
 
     # Load main module
     name = get_filename(filePath)
@@ -89,7 +89,7 @@ def reload_module(filePath):
                     method = create_function(classTempAttrName, moduleInstance)
                     method.__code__ = classTemp.__code__
 
-                    setattr(moduleAttrObj, classTempAttrName, method )
+                    setattr(moduleAttrObj, classTempAttrName, method)
                     delattr(moduleInstance, classTempAttrName)
 
                 # Update current method
