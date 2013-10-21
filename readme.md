@@ -17,3 +17,5 @@ Current to-do list:
   * Package awareness
   * Look into detecting renamed objects
   * Find bugs
+  * Look into writing unittests
+  * Documentation
