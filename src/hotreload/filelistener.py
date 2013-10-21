@@ -27,43 +27,44 @@ import os
 from multiprocessing import Queue, Process
 
 
+
+def file_listener(path, queue):
+    ''' check the filesystem if any times in the current path have changed.
+        Must use either multiprocessing or threading
+    '''
+    running = True
+    filesInfo = []
+    oldFilesInfo = None
+
+    while running:
+        time.sleep(0.05) # To reduce cpu usage
+
+        del oldFilesInfo
+        oldFilesInfo = filesInfo
+        filesInfo = []
+
+        for root, dirname, filenames in os.walk(path):
+            for fileName in fnmatch.filter(filenames, '*.py'):
+                filePath = os.sep.join((root, fileName))
+                filesInfo.append((filePath, os.path.getmtime(filePath)))
+
+        data = tuple(set(filesInfo) - set(oldFilesInfo))
+
+        if data and oldFilesInfo:
+            data = tuple(item[0] for item in data)
+            queue.put(data)
+
+        else:
+            del data
+
 class FileListener(object):
     ''' Constantly check if a file has changed  '''
 
     def __init__(self, path):
 
         self.queue = Queue()
-        self.proc = Process(target=self.file_listener, args=(path, self.queue))
+        self.proc = Process(target=file_listener, args=(path, self.queue))
         self.proc.start()
-
-    def file_listener(self, path, queue):
-        ''' check the filesystem if any times in the current path have changed.
-            Must use either multiprocessing or threading
-        '''
-        running = True
-        filesInfo = []
-        oldFilesInfo = None
-
-        while running:
-            time.sleep(0.05) # To reduce cpu usage
-
-            del oldFilesInfo
-            oldFilesInfo = filesInfo
-            filesInfo = []
-
-            for root, dirname, filenames in os.walk(path):
-                for fileName in fnmatch.filter(filenames, '*.py'):
-                    filePath = os.sep.join((root, fileName))
-                    filesInfo.append((filePath, os.path.getmtime(filePath)))
-
-            data = tuple(set(filesInfo) - set(oldFilesInfo))
-
-            if data and oldFilesInfo:
-                data = tuple(item[0] for item in data)
-                queue.put(data)
-
-            else:
-                del data
 
     def check(self):
         ''' Run a check to see if any files have changed.
@@ -73,6 +74,6 @@ class FileListener(object):
         try:
             changedFiles = self.queue.get_nowait()
         except:
-            changedFiles = None
+            changedFiles = ()
 
         return changedFiles

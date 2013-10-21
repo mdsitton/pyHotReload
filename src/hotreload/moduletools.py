@@ -23,16 +23,42 @@
 
 import sys
 
-from hotreload.fileutil import load_source_file
+try:  # Python 3
+    from importlib.machinery import SourceFileLoader
+except ImportError:  # Python 2
+    from imp import load_source
 
-def bind_method(previous, new, method):
-    ''' Takes a method from one class and binds it to another '''
-    boundMethod = getattr(previous, method).__get__(new, previous)
-    setattr(new, method, boundMethod)
 
-def diff(x, y):
-    ''' Return the differance between two tuples '''
-    return tuple(set(x) - set(y))
+def load_source_file(pathName, name):
+    ''' Load source file from the specified file
+        Returns module, and puts it as specified alias in sys.module.
+    '''
+    # In python 3 parts of imp needed are deprecated, we use importlib instead.
+    try: # Python 3
+        SourceFileLoader(name, pathName).load_module(name)
+    except NameError: # Python 2
+        load_source(name, pathName)
+
+    return sys.modules[name]
+
+
+def exec_(obj, glob, local=None):
+    ''' 2.x/3.x compatibility for exec function '''
+    try:
+        exec (obj in glob, local)
+    except TypeError:
+        exec(obj, glob, local)
+
+
+def create_function(name, module):
+    ''' Create a function within a module. Then return it.'''
+
+    code = 'def {}(): pass'.format(name)
+    exec_(code, module.__dict__, None)
+
+    function = getattr(module, name)
+    return function
+
 
 class ModuleManager(object):
     ''' Managing directly dealing with import mechanisms relating to modules'''

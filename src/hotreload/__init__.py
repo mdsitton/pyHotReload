@@ -22,12 +22,108 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import sys
-import types
 
 from hotreload.filelistener import FileListener
-from hotreload.fileutil import get_filename, get_path, exec_
-from hotreload.moduletools import ModuleManager, bind_method
+from hotreload.fileutil import get_filename, get_path
+from hotreload.moduletools import ModuleManager, create_function
 
+
+exemptList = ('__name__', '__builtins__', '__file__', '__package__')
+
+def reload_module(filePath):
+    ''' Reload a python module without replacing it '''
+
+    newModuleVar = False
+    newClassVar = False
+
+    # Load main module
+    name = get_filename(filePath)
+    module = ModuleManager(filePath, name, name)
+    moduleInstance = module.instance
+    moduleVars = vars(moduleInstance)
+
+    tempName = name + '2'
+    moduleTemp = ModuleManager(filePath, name, tempName)
+    moduleTempVars = vars(moduleTemp.instance)
+
+    for moduleTempAttrName in list(moduleTempVars.keys()):  # Module Level
+
+        # New Module-Level object
+        if moduleTempAttrName not in moduleVars.keys():
+            setattr(moduleInstance, moduleTempAttrName, None)
+            newModuleVar = True
+
+        moduleAttrObj = moduleVars[moduleTempAttrName]
+        moduleTempAttrObj = moduleTempVars[moduleTempAttrName]
+
+        # Class Object Found
+        if isinstance(moduleTempAttrObj, type):
+
+            # If the class is new create it
+            if newModuleVar:
+                baseClasses = moduleTempAttrObj.__bases__
+                newClass = type(moduleTempAttrName, baseClasses, {})
+                setattr(moduleInstance, moduleTempAttrName, newClass)
+
+                moduleVars = vars(moduleInstance)
+                moduleAttrObj = moduleVars[moduleTempAttrName]
+
+            classVars = vars(moduleAttrObj)
+            classTempVars = vars(moduleTempAttrObj)
+
+            # Objects within Class
+            for classTempAttrName in list(classTempVars.keys()):
+
+                # if the class Attribute is new set a temp value for it
+                if classTempAttrName not in classVars.keys():
+                    setattr(moduleAttrObj, classTempAttrName, None)
+                    newClassVar = True
+
+                classAttrObj = classVars[classTempAttrName]
+                classTemp = classTempVars[classTempAttrName]
+
+                hasCode = hasattr(classTemp, '__code__')
+
+                # New method, create it
+                if newClassVar and hasCode:
+                    method = create_function(classTempAttrName, moduleInstance)
+                    method.__code__ = classTemp.__code__
+
+                    setattr(moduleAttrObj, classTempAttrName, method )
+                    delattr(moduleInstance, classTempAttrName)
+
+                # Update current method
+                elif hasCode:
+                    classAttrObj.__code__ = classTemp.__code__
+
+                # New Class variable, define it properly
+                elif newClassVar:
+                    setattr(moduleAttrObj, classTempAttrName, classTemp)
+
+        # Global Variable, Function, or Import(Module) Object found
+        else: 
+
+            # Verify that the variable isnt a builtin attribute
+            # TODO: Finish adding more builtin attributes or make it detect them
+            if moduleTempAttrName not in exemptList:
+
+                hasCode = hasattr(moduleTempAttrObj, '__code__')
+
+                # New function, create it.
+                if newModuleVar and hasCode:
+                    function = create_function(moduleTempAttrName, moduleInstance)
+                    function.__code__ = moduleTempAttrObj.__code__
+
+                # Update current function.
+                elif hasCode:
+                    moduleAttrObj.__code__ = moduleTempAttrObj.__code__
+
+                # New global variable, define it properly
+                elif newModuleVar:
+                    setattr(moduleInstance, moduleTempAttrName, moduleTempAttrObj)
+
+    # unload temp module
+    del sys.modules[tempName]
 
 class HotReload(object):
     ''' Facilitates detecting and reloading of any python module located within
@@ -35,109 +131,12 @@ class HotReload(object):
     '''
 
     def __init__(self):
-
-        filePath = get_path()
-        self.fileListener = FileListener(filePath)
-
-    def reload_module(self, filePath):
-        ''' Reload a python module '''
-
-        # Load main module
-        name = get_filename(filePath)
-        module = ModuleManager(filePath, name, name)
-        moduleInstance = module.instance
-        moduleVars = vars(moduleInstance)
-
-        nameTemp = name + '2'
-        moduleTemp = ModuleManager(filePath, name, nameTemp)
-        moduleTempVars = vars(moduleTemp.instance)
-
-        for moduleTempAttrib in list(moduleTempVars.keys()):  # Module Level
-
-            newModuleVar = False
-
-            if moduleTempAttrib not in moduleVars.keys():
-                setattr(moduleInstance, moduleTempAttrib, None)
-                moduleVars = vars(moduleInstance)
-                newModuleVar = True
-
-            moduleAttribObject = moduleVars[moduleTempAttrib]
-            moduleTempAttribObject = moduleTempVars[moduleTempAttrib]
-
-            # Is it a class?
-            if isinstance(moduleTempAttribObject, type):
-
-                if newModuleVar:
-                    baseClasses = moduleTempAttribObject.__bases__
-                    newClass = type(moduleTempAttrib, baseClasses, {})
-                    setattr(moduleInstance, moduleTempAttrib, newClass)
-
-                    moduleVars = vars(moduleInstance)
-                    moduleAttribObject = moduleVars[moduleTempAttrib]
-
-                classVars = vars(moduleAttribObject)
-                classTempVars = vars(moduleTempAttribObject)
-
-                for classTempAttib in list(classTempVars.keys()): # Class Level
-
-                    newClassVar = False
-
-                    if classTempAttib not in classVars.keys():
-                        setattr(moduleAttribObject, classTempAttib, None)
-                        classVars = vars(moduleAttribObject)
-                        newClassVar = True
-
-
-                    classAttribObject = classVars[classTempAttib]
-                    classTempAttribObject = classTempVars[classTempAttib]
-
-                    isCall = (hasattr(classTempAttribObject, '__call__') and hasattr(classTempAttribObject, '__code__'))
-
-                    if newClassVar and isCall:
-                        code = 'def {}(self): pass'.format(classTempAttib)
-                        exec_(code, moduleInstance.__dict__, None)
-                        method = getattr(moduleInstance, classTempAttib)
-                        method.__code__ = classTempAttribObject.__code__
-                        setattr(moduleAttribObject, classTempAttib, method )
-                        delattr(moduleInstance, classTempAttib)
-                    elif isCall:
-                        classAttribObject.__code__ = classTempAttribObject.__code__
-                    elif newClassVar:
-                        setattr(moduleAttribObject, classTempAttib, classTempAttribObject)
-                    
-            else: # Its a global variable or function
-
-                # Skip imported module
-                if isinstance(moduleTempAttribObject, types.ModuleType):
-                    continue
-
-                # Verify that the variable isnt a builtin attribute
-                valuesNotChange = ('__name__', '__builtins__', '__file__', '__package__')
-
-                if moduleTempAttrib not in valuesNotChange:
-                    isCall = (hasattr(moduleTempAttribObject, '__call__') and hasattr(moduleTempAttribObject, '__code__'))
-                    if newModuleVar and isCall:
-                        code = 'def {}(): pass'.format(moduleTempAttrib)
-                        exec_(code, moduleInstance.__dict__)
-                        moduleAttribObject.__code__ = moduleTempAttribObject.__code__
-                    elif isCall:
-                        moduleAttribObject.__code__ = moduleTempAttribObject.__code__
-                    elif newModuleVar:
-                        setattr(moduleInstance, moduleTempAttrib, moduleTempAttribObject)
-
-        # unload temp module container class keep the module in sys.modules
-        del moduleTempVars
-        del moduleTemp
-        del sys.modules[nameTemp]
+        self.fileListener = FileListener(get_path())
 
     def run(self):
         ''' Check with FileListener if any files have been modified.
             Required to be ran in the beginning of the main loop.
          '''
          
-        changedFiles = self.fileListener.check()
-
-        # if they have 
-        if changedFiles:
-            for filePath in changedFiles:
-                self.reload_module(filePath)
+        for filePath in self.fileListener.check():
+            reload_module(filePath)

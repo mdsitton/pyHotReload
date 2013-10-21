@@ -44,4 +44,3 @@ class Testing(object):
         global globalvartest
         globalvartest = False
         test_function()
- 
