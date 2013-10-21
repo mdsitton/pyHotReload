@@ -31,6 +31,10 @@ from testing import Testing
 if __name__ == '__main__':
     main = Testing()
     hotReload = hotreload.HotReload()
-    while True:
-        hotReload.run()
-        main.run()
+    try:
+	    while True:
+	        hotReload.run()
+	    	main.run()
+    except KeyboardInterrupt:
+    	hotReload.stop()
+

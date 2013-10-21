@@ -137,6 +137,8 @@ class HotReload(object):
         ''' Check with FileListener if any files have been modified.
             Required to be ran in the beginning of the main loop.
          '''
-         
+
         for filePath in self.fileListener.check():
             reload_module(filePath)
+    def stop(self):
+        self.fileListener.stop()

@@ -28,34 +28,42 @@ from multiprocessing import Queue, Process
 
 
 
-def file_listener(path, queue):
+def file_listener(path, queue, queueIn):
     ''' check the filesystem if any times in the current path have changed.
         Must use either multiprocessing or threading
     '''
     running = True
     filesInfo = []
     oldFilesInfo = None
+    try:
+        while running:
+            time.sleep(0.05) # To reduce cpu usage
 
-    while running:
-        time.sleep(0.05) # To reduce cpu usage
+            del oldFilesInfo
+            oldFilesInfo = filesInfo
+            filesInfo = []
 
-        del oldFilesInfo
-        oldFilesInfo = filesInfo
-        filesInfo = []
+            for root, dirname, filenames in os.walk(path):
+                for fileName in fnmatch.filter(filenames, '*.py'):
+                    filePath = os.sep.join((root, fileName))
+                    filesInfo.append((filePath, os.path.getmtime(filePath)))
 
-        for root, dirname, filenames in os.walk(path):
-            for fileName in fnmatch.filter(filenames, '*.py'):
-                filePath = os.sep.join((root, fileName))
-                filesInfo.append((filePath, os.path.getmtime(filePath)))
+            data = tuple(set(filesInfo) - set(oldFilesInfo))
 
-        data = tuple(set(filesInfo) - set(oldFilesInfo))
+            if data and oldFilesInfo:
+                data = tuple(item[0] for item in data)
+                queue.put(data)
 
-        if data and oldFilesInfo:
-            data = tuple(item[0] for item in data)
-            queue.put(data)
+            else:
+                del data
 
-        else:
-            del data
+            try:
+                running = queueIn.get_nowait()
+            except:
+                running = True
+
+    except KeyboardInterrupt:
+        pass
 
 class FileListener(object):
     ''' Constantly check if a file has changed  '''
@@ -63,7 +71,8 @@ class FileListener(object):
     def __init__(self, path):
 
         self.queue = Queue()
-        self.proc = Process(target=file_listener, args=(path, self.queue))
+        self.queueTo = Queue()
+        self.proc = Process(target=file_listener, args=(path, self.queue, self.queueTo))
         self.proc.start()
 
     def check(self):
@@ -77,3 +86,6 @@ class FileListener(object):
             changedFiles = ()
 
         return changedFiles
+
+    def stop(self):
+        self.queueTo.put(False)
