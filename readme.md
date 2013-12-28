@@ -14,7 +14,6 @@ Tested in python 2.7.5 and 3.3.2.
 Current to-do list:
 
   * Detect removed objects
-  * Package awareness
   * Look into detecting renamed objects
   * Find bugs
   * Look into writing unittests
