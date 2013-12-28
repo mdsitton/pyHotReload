@@ -25,6 +25,9 @@
     its a place to try and break the code mainly.
 '''
 
+import testpackage.testsubone.test as test
+
+print (test.__name__)
 globalvartest = False
 
 def test_function():
