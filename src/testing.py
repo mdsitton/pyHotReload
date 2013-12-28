@@ -26,6 +26,7 @@
 '''
 
 import testpackage.testsubone.test as test
+import testpackage.testsubtwo.test as test2
 
 print (test.__name__)
 globalvartest = False
@@ -46,4 +47,5 @@ class Testing(object):
         ''' This is a method in which to test hotreloading '''
         global globalvartest
         globalvartest = False
+        test2.function2d3()
         test_function()

@@ -25,7 +25,7 @@ import sys
 
 from hotreload.filelistener import FileListener
 from hotreload.fileutil import get_filename, get_path
-from hotreload.moduletools import ModuleManager, create_function
+from hotreload.moduletools import ModuleManager, create_function, package_name
 
 
 def reload_module(filePath):
@@ -37,7 +37,7 @@ def reload_module(filePath):
     exemptList = ('__name__', '__builtins__', '__file__', '__package__')
 
     # Load main module
-    name = get_filename(filePath)
+    name = package_name(filePath)
     module = ModuleManager(filePath, name, name)
     moduleInstance = module.instance
     moduleVars = vars(moduleInstance)

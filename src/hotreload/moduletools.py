@@ -59,6 +59,15 @@ def create_function(name, module):
     function = getattr(module, name)
     return function
 
+def package_name(path):
+    ''' Return the name a file is refrenced by in sys.modules '''
+
+    moduleNames = list(sys.modules.keys())
+    for item in moduleNames:
+        module = sys.modules[item]
+        if hasattr(module, '__file__') and module.__file__ == path:
+            return item
+    return None
 
 class ModuleManager(object):
     ''' Managing directly dealing with import mechanisms relating to modules'''
