@@ -32,9 +32,9 @@ if __name__ == '__main__':
     main = Testing()
     hotReload = hotreload.HotReload()
     try:
-	    while True:
-	        hotReload.run()
-	    	main.run()
+        while True:
+            hotReload.run()
+            main.run()
     except KeyboardInterrupt:
-    	hotReload.stop()
+        hotReload.stop()
 
