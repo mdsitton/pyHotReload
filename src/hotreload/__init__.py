@@ -25,105 +25,171 @@ import sys
 
 from hotreload.filelistener import FileListener
 from hotreload.fileutil import get_filename, get_path
-from hotreload.moduletools import ModuleManager, create_function, package_name
+from hotreload.moduletools import ModuleManager, package_name
 
+def exec_(obj, glob, local=None):
+    ''' 2.x/3.x compatibility for exec function '''
+    try:
+        exec (obj in glob, local)
+    except TypeError:
+        exec(obj, glob, local)
 
-def reload_module(filePath):
-    ''' Reload a python module without replacing it '''
+class Reload(object):
 
-    newModuleVar = False
-    newClassVar = False
+    def default_vars(self):
 
-    exemptList = ('__name__', '__builtins__', '__file__', '__package__')
+        self.newModuleVar = None
 
-    # Load main module
-    name = package_name(filePath)
-    module = ModuleManager(filePath, name, name)
-    moduleInstance = module.instance
-    moduleVars = vars(moduleInstance)
+        self.filePath = None
+        self.name = None
+        self.module = None
+        self.moduleInstance = None
+        self.moduleVars = None
 
-    tempName = name + '2'
-    moduleTemp = ModuleManager(filePath, name, tempName)
-    moduleTempVars = vars(moduleTemp.instance)
+        self.tempName = None
+        self.moduleTemp = None
+        self.moduleTempVars = None
 
-    for moduleTempAttrName in list(moduleTempVars.keys()):  # Module Level
+        self.moduleTempAttrName = None
+        self.moduleAttrObj = None
+        self.moduleTempAttrObj = None
 
-        # New Module-Level object
-        if moduleTempAttrName not in moduleVars.keys():
-            setattr(moduleInstance, moduleTempAttrName, None)
-            newModuleVar = True
+    def init_module(self, filePath):
 
-        moduleAttrObj = moduleVars[moduleTempAttrName]
-        moduleTempAttrObj = moduleTempVars[moduleTempAttrName]
+        try:
+            self.exemptList = ('__name__', '__builtins__', '__file__', '__package__')
 
-        # Class Object Found
-        if isinstance(moduleTempAttrObj, type):
+            self.newModuleVar = False
 
-            # If the class is new create it
-            if newModuleVar:
-                baseClasses = moduleTempAttrObj.__bases__
-                newClass = type(moduleTempAttrName, baseClasses, {})
-                setattr(moduleInstance, moduleTempAttrName, newClass)
+            self.filePath = filePath
+            self.name = package_name(filePath)
+            self.module = ModuleManager(filePath, self.name, self.name)
+            self.moduleInstance = self.module.instance
+            self.moduleVars = vars(self.moduleInstance)
 
-                moduleVars = vars(moduleInstance)
-                moduleAttrObj = moduleVars[moduleTempAttrName]
+            self.tempName = self.name + '2'
+            self.moduleTemp = ModuleManager(self.filePath, self.name, self.tempName)
+            self.moduleTempVars = vars(self.moduleTemp.instance)
 
-            classVars = vars(moduleAttrObj)
-            classTempVars = vars(moduleTempAttrObj)
+            return True
+        
+        except Exception as e:
+            print (e)
+            return False
 
-            # Objects within Class
-            for classTempAttrName in list(classTempVars.keys()):
+    def create_function(self, name):
+        ''' Create a function within a module. Then return it.'''
+        code = 'def {}(): pass'.format(name)
+        exec_(code, self.moduleInstance.__dict__, None)
 
-                # if the class Attribute is new set a temp value for it
-                if classTempAttrName not in classVars.keys():
-                    setattr(moduleAttrObj, classTempAttrName, None)
-                    newClassVar = True
+        function = getattr(self.moduleInstance, name)
+        return function
 
-                classAttrObj = classVars[classTempAttrName]
-                classTemp = classTempVars[classTempAttrName]
+    def new_function(self, name, refObject):
+        ''' Swap code objects with provided refrence '''
 
-                hasCode = hasattr(classTemp, '__code__')
+        function = self.create_function(name)
+        function.__code__ = refObject.__code__
 
-                # New method, create it
-                if newClassVar and hasCode:
-                    method = create_function(classTempAttrName, moduleInstance)
-                    method.__code__ = classTemp.__code__
+    def new_method(self, name, refObject, parent):
+        ''' Put a method into a different class by swaping code objects '''
 
-                    setattr(moduleAttrObj, classTempAttrName, method)
-                    delattr(moduleInstance, classTempAttrName)
+        method = self.create_function(name)
+        method.__code__ = refObject.__code__
 
-                # Update current method
-                elif hasCode:
-                    classAttrObj.__code__ = classTemp.__code__
+        setattr(parent, name, method)
+        delattr(self.moduleInstance, name)
 
-                # New Class variable, define it properly
-                elif newClassVar:
-                    setattr(moduleAttrObj, classTempAttrName, classTemp)
+    def new_class(self, name, refObject):
+        baseClasses = refObject.__bases__
+        newClass = type(name, baseClasses, {})
 
-        # Global Variable, Function, or Import(Module) Object found
-        else: 
+        setattr(self.moduleInstance, name, newClass)
+        self.update_module_vars()
 
-            # Verify that the variable isnt a builtin attribute
-            # TODO: Finish adding more builtin attributes or make it detect them
-            if moduleTempAttrName not in exemptList:
+    def update_module_vars(self):
+        self.moduleVars = vars(self.moduleInstance)
+        self.moduleAttrObj = self.moduleVars[self.moduleTempAttrName]
 
-                hasCode = hasattr(moduleTempAttrObj, '__code__')
+    def process_class(self, orgClass, refClass):
+        ''' Process and reload a class '''
 
-                # New function, create it.
-                if newModuleVar and hasCode:
-                    function = create_function(moduleTempAttrName, moduleInstance)
-                    function.__code__ = moduleTempAttrObj.__code__
+        newClassVar = False
 
-                # Update current function.
-                elif hasCode:
-                    moduleAttrObj.__code__ = moduleTempAttrObj.__code__
+        classVars = vars(orgClass)
+        classTempVars = vars(refClass)
 
-                # New global variable, define it properly
-                elif newModuleVar:
-                    setattr(moduleInstance, moduleTempAttrName, moduleTempAttrObj)
+        for classTempAttrName in list(classTempVars.keys()):
 
-    # unload temp module
-    del sys.modules[tempName]
+            # if the class Attribute is new set a temp value for it
+            if classTempAttrName not in classVars.keys():
+                setattr(orgClass, classTempAttrName, None)
+                newClassVar = True
+
+            classAttrObj = classVars[classTempAttrName]
+            classTemp = classTempVars[classTempAttrName]
+
+            hasCode = hasattr(classTemp, '__code__')
+
+            # New method, create it
+            if newClassVar and hasCode:
+                self.new_method(classTempAttrName, classTemp, orgClass)
+
+            # Update current method
+            elif hasCode:
+                classAttrObj.__code__ = classTemp.__code__
+
+            # New Class variable, define it properly
+            elif newClassVar:
+                setattr(orgClass, classTempAttrName, classTemp)
+
+    def reload(self):
+        ''' Reload a python module without replacing it '''
+
+        for self.moduleTempAttrName in list(self.moduleTempVars.keys()):  # Module Level
+
+            # New Module-Level, create placeholder
+            if self.moduleTempAttrName not in self.moduleVars.keys():
+                setattr(self.moduleInstance, self.moduleTempAttrName, None)
+                self.newModuleVar = True
+
+            self.moduleAttrObj = self.moduleVars[self.moduleTempAttrName]
+            self.moduleTempAttrObj = self.moduleTempVars[self.moduleTempAttrName]
+
+            # Class Object Found
+            if isinstance(self.moduleTempAttrObj, type):
+
+                # If its a new class create it.
+                if self.newModuleVar:
+                    self.new_class(self.moduleTempAttrName, self.moduleTempAttrObj)
+
+                self.process_class(self.moduleAttrObj, self.moduleTempAttrObj)
+
+            # Global Variable, Function, or Import(Module) Object found
+            else: 
+
+                # Verify that the variable isnt a builtin attribute
+                # TODO: Finish adding more builtin attributes or make it detect them
+                if self.moduleTempAttrName not in self.exemptList:
+
+                    hasCode = hasattr(self.moduleTempAttrObj, '__code__')
+
+                    # New function, create it.
+                    if self.newModuleVar and hasCode:
+                        self.new_function(self.moduleTempAttrName, self.moduleTempAttrObj)
+
+                    # Update current function.
+                    elif hasCode:
+                        self.moduleAttrObj.__code__ = self.moduleTempAttrObj.__code__
+
+                    # New global variable, define it properly
+                    elif self.newModuleVar:
+                        setattr(self.moduleInstance, self.moduleTempAttrName, self.moduleTempAttrObj)
+
+        # unload temp module
+        self.moduleTemp.delete()
+        self.default_vars()
+
 
 class HotReload(object):
     ''' Facilitates detecting and reloading of any python module located within
@@ -131,14 +197,21 @@ class HotReload(object):
     '''
 
     def __init__(self):
+
         self.fileListener = FileListener(get_path())
+        self.files = None
+        self.reload = Reload()
 
     def run(self):
         ''' Check with FileListener if any files have been modified.
             Required to be ran in the beginning of the main loop.
          '''
 
-        for filePath in self.fileListener.check():
-            reload_module(filePath)
+        self.files = self.fileListener.check()
+
+        for filePath in self.files:
+            if self.reload.init_module(filePath):
+                self.reload.reload()
+
     def stop(self):
         self.fileListener.stop()

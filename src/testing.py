@@ -46,6 +46,6 @@ class Testing(object):
     def run(self):
         ''' This is a method in which to test hotreloading '''
         global globalvartest
-        globalvartest = False
-        test2.function2d3()
+        globalvartest = True
+        test.function23()
         test_function()

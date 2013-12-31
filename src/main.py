@@ -31,10 +31,12 @@ from testing import Testing
 if __name__ == '__main__':
     main = Testing()
     hotReload = hotreload.HotReload()
-    try:
-        while True:
-            hotReload.run()
+    running = True
+    while running:
+        hotReload.run()
+        try:
             main.run()
-    except KeyboardInterrupt:
-        hotReload.stop()
 
+        except KeyboardInterrupt:
+            hotReload.stop()
+            running = False

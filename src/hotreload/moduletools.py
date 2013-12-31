@@ -42,23 +42,6 @@ def load_source_file(pathName, name):
     return sys.modules[name]
 
 
-def exec_(obj, glob, local=None):
-    ''' 2.x/3.x compatibility for exec function '''
-    try:
-        exec (obj in glob, local)
-    except TypeError:
-        exec(obj, glob, local)
-
-
-def create_function(name, module):
-    ''' Create a function within a module. Then return it.'''
-
-    code = 'def {}(): pass'.format(name)
-    exec_(code, module.__dict__, None)
-
-    function = getattr(module, name)
-    return function
-
 def package_name(path):
     ''' Return the name a file is refrenced by in sys.modules '''
 
@@ -81,3 +64,7 @@ class ModuleManager(object):
             load_source_file(self.filePath, self.displayName)
 
         self.instance = sys.modules[self.displayName]
+
+    def delete(self):
+        del self.instance
+        del sys.modules[self.displayName]
