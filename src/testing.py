@@ -28,7 +28,6 @@
 import testpackage.testsubone.test as test
 import testpackage.testsubtwo.test as test2
 
-print (test.__name__)
 globalvartest = False
 
 def test_function():
@@ -46,6 +45,6 @@ class Testing(object):
     def run(self):
         ''' This is a method in which to test hotreloading '''
         global globalvartest
-        globalvartest = True
+        globalvartest = False
         test.function23()
         test_function()

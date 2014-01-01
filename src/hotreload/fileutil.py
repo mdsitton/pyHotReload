@@ -21,6 +21,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import fnmatch
 import os
 import sys
 try:  # Python 3
@@ -29,7 +30,6 @@ except ImportError:  # Python 2
     from imp import load_source
 
 # These are functions to help with file related tasks
-
 
 def get_path():
     ''' get the current path '''
@@ -65,3 +65,33 @@ def exec_(obj, glob, local=None):
         exec (obj in glob, local)
     except TypeError:
         exec(obj, glob, local)
+
+
+class FileChecker(object):
+    ''' Track when an if a file has changed '''
+
+    def __init__(self, path):
+        self.path = path
+
+        self.oldFilesInfo = None
+        self.filesInfo = []
+
+        # Run check once to populate initial values
+        self.check()
+
+    def check(self):
+        ''' Run a check to see if any files have changed.
+         '''
+
+        del self.oldFilesInfo
+        self.oldFilesInfo = self.filesInfo
+        self.filesInfo = []
+
+        for root, dirname, filenames in os.walk(self.path):
+            for fileName in fnmatch.filter(filenames, '*.py'):
+                filePath = os.sep.join((root, fileName))
+                self.filesInfo.append((filePath, os.path.getmtime(filePath)))
+
+        changedFiles = tuple(item[0] for item in set(self.filesInfo) - set(self.oldFilesInfo))
+
+        return changedFiles

@@ -29,14 +29,9 @@ import hotreload
 from testing import Testing
 
 if __name__ == '__main__':
-    main = Testing()
     hotReload = hotreload.HotReload()
-    running = True
-    while running:
+    main = Testing()
+    
+    while True:
         hotReload.run()
-        try:
-            main.run()
-
-        except KeyboardInterrupt:
-            hotReload.stop()
-            running = False
+        main.run()

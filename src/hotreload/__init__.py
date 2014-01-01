@@ -24,8 +24,7 @@
 import sys
 import types
 
-from hotreload.filelistener import FileListener
-from hotreload.fileutil import get_filename, get_path
+from hotreload.fileutil import get_filename, get_path, FileChecker
 from hotreload.moduletools import ModuleManager, package_name
 
 def exec_(obj, glob, local=None):
@@ -197,8 +196,7 @@ class HotReload(object):
     '''
 
     def __init__(self):
-
-        self.fileListener = FileListener(get_path())
+        self.fileListener = FileChecker(get_path())
         self.files = None
         self.reload = Reload()
 
@@ -206,12 +204,7 @@ class HotReload(object):
         ''' Check with FileListener if any files have been modified.
             Required to be ran in the beginning of the main loop.
          '''
-
         self.files = self.fileListener.check()
-
         for filePath in self.files:
             if self.reload.init_module(filePath):
                 self.reload.reload()
-
-    def stop(self):
-        self.fileListener.stop()

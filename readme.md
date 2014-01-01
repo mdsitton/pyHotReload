@@ -11,10 +11,13 @@ In its current state, this could cause bugs in the reloaded module. If you come 
 
 Tested in python 2.7.5, 3.3.2 and pypy. Should work on linux also, i've done some limited tests nothing major though.
 
+I've removed the need for a second process to scan for hardware changes. There is a downside though, now the size of the project can now effect performance.
+
 Current to-do list:
 
   * Detect removed objects
   * Look into detecting renamed objects
   * Find bugs
+  * Add the ability to set the location where files are monitored.
   * Look into writing unittests
   * Documentation

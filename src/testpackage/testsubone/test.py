@@ -1,11 +1,11 @@
 
 class Tester(object):
 	def __init__(self):
-		print('__init__2222ddd')
+		print('test')
 
 def function23():
 	#func2r()
-	Tester()
+	pass#Tester()
 
 def func2r():
-	print ('derfpss')
+	print ('derfpsss')
