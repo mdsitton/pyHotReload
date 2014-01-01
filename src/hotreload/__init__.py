@@ -34,7 +34,15 @@ def exec_(obj, glob, local=None):
     except TypeError:
         exec(obj, glob, local)
 
-class Reload(object):
+
+class HotReload(object):
+    ''' Facilitates detecting and reloading of any python module located within
+        the folder structure of the first launched script.
+    '''
+
+    def __init__(self):
+        self.fileListener = FileChecker(get_path())
+        self.files = None
 
     def default_vars(self):
 
@@ -189,22 +197,12 @@ class Reload(object):
         self.moduleTemp.delete()
         self.default_vars()
 
-
-class HotReload(object):
-    ''' Facilitates detecting and reloading of any python module located within
-        the folder structure of the first launched script.
-    '''
-
-    def __init__(self):
-        self.fileListener = FileChecker(get_path())
-        self.files = None
-        self.reload = Reload()
-
     def run(self):
         ''' Check with FileListener if any files have been modified.
             Required to be ran in the beginning of the main loop.
          '''
         self.files = self.fileListener.check()
+        
         for filePath in self.files:
-            if self.reload.init_module(filePath):
-                self.reload.reload()
+            if self.init_module(filePath):
+                self.reload()
