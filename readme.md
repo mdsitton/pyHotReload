@@ -9,7 +9,7 @@ Where as this loads a copy of the module into another name under sys.modules. A 
 
 In its current state, this could cause bugs in the reloaded module. If you come across something, please report it.
 
-Tested in python 2.7.5 and 3.3.2.
+Tested in python 2.7.5, 3.3.2 and pypy. Should work on linux also, i've done some limited tests nothing major though.
 
 Current to-do list:
 

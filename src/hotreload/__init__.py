@@ -22,6 +22,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import sys
+import types
 
 from hotreload.filelistener import FileListener
 from hotreload.fileutil import get_filename, get_path
@@ -57,8 +58,6 @@ class Reload(object):
     def init_module(self, filePath):
 
         try:
-            self.exemptList = ('__name__', '__builtins__', '__file__', '__package__')
-
             self.newModuleVar = False
 
             self.filePath = filePath
@@ -131,17 +130,19 @@ class Reload(object):
 
             hasCode = hasattr(classTemp, '__code__')
 
-            # New method, create it
-            if newClassVar and hasCode:
-                self.new_method(classTempAttrName, classTemp, orgClass)
+            # Verify that the variable isnt a builtin attribute
+            if not isinstance(classAttrObj, types.BuiltinFunctionType):
+                # New method, create it
+                if newClassVar and hasCode:
+                    self.new_method(classTempAttrName, classTemp, orgClass)
 
-            # Update current method
-            elif hasCode:
-                classAttrObj.__code__ = classTemp.__code__
+                # Update current method
+                elif hasCode:
+                    classAttrObj.__code__ = classTemp.__code__
 
-            # New Class variable, define it properly
-            elif newClassVar:
-                setattr(orgClass, classTempAttrName, classTemp)
+                # New Class variable, define it properly
+                elif newClassVar:
+                    setattr(orgClass, classTempAttrName, classTemp)
 
     def reload(self):
         ''' Reload a python module without replacing it '''
@@ -169,8 +170,7 @@ class Reload(object):
             else: 
 
                 # Verify that the variable isnt a builtin attribute
-                # TODO: Finish adding more builtin attributes or make it detect them
-                if self.moduleTempAttrName not in self.exemptList:
+                if not isinstance(self.moduleAttrObj, types.BuiltinFunctionType):
 
                     hasCode = hasattr(self.moduleTempAttrObj, '__code__')
 
