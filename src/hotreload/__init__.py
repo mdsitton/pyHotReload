@@ -24,7 +24,7 @@
 import sys
 import types
 
-from hotreload.fileutil import get_filename, get_path, FileChecker
+from hotreload.fileutil import get_filename, FileChecker
 from hotreload.moduletools import ModuleManager, package_name
 
 def exec_(obj, glob, local=None):
@@ -40,8 +40,8 @@ class HotReload(object):
         the folder structure of the first launched script.
     '''
 
-    def __init__(self):
-        self.fileListener = FileChecker(get_path())
+    def __init__(self, checkPaths=tuple()):
+        self.fileListener = FileChecker(checkPaths)
         self.files = None
 
     def default_vars(self):
@@ -202,7 +202,7 @@ class HotReload(object):
             Required to be ran in the beginning of the main loop.
          '''
         self.files = self.fileListener.check()
-        
+
         for filePath in self.files:
             if self.init_module(filePath):
                 self.reload()

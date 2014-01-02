@@ -18,6 +18,5 @@ Current to-do list:
   * Detect removed objects
   * Look into detecting renamed objects
   * Find bugs
-  * Add the ability to set the location where files are monitored.
   * Look into writing unittests
   * Documentation

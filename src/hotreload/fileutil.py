@@ -65,6 +65,9 @@ class FileChecker(object):
     def __init__(self, path):
         self.path = path
 
+        if not self.path:
+            self.path = (get_path(),)
+
         self.oldFilesInfo = None
         self.filesInfo = []
 
@@ -78,12 +81,12 @@ class FileChecker(object):
         del self.oldFilesInfo
         self.oldFilesInfo = self.filesInfo
         self.filesInfo = []
-
-        for root, dirname, filenames in os.walk(self.path):
-            filenames = [item for item in filenames if item[-3:] == '.py']
-            for fileName in filenames:
-                filePath = os.sep.join((root, fileName))
-                self.filesInfo.append((filePath, os.path.getmtime(filePath)))
-
+        for path in self.path:
+            for root, dirname, filenames in os.walk(path):
+                filenames = [item for item in filenames if item[-3:] == '.py']
+                for fileName in filenames:
+                    filePath = os.sep.join((root, fileName))
+                    self.filesInfo.append((filePath, os.path.getmtime(filePath)))
+        
         changedFiles = tuple(item[0] for item in set(self.filesInfo) - set(self.oldFilesInfo))
         return changedFiles
