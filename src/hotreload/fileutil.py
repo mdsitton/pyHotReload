@@ -58,13 +58,6 @@ def load_source_file(pathName, name):
 
     return sys.modules[name]
 
-def exec_(obj, glob, local=None):
-    ''' 2.x/3.x compatibility for exec function '''
-    try:
-        exec (obj in glob, local)
-    except TypeError:
-        exec(obj, glob, local)
-
 
 class FileChecker(object):
     ''' Track when an if a file has changed '''
