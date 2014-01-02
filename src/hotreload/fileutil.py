@@ -21,7 +21,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import fnmatch
 import os
 import sys
 try:  # Python 3
@@ -88,10 +87,10 @@ class FileChecker(object):
         self.filesInfo = []
 
         for root, dirname, filenames in os.walk(self.path):
-            for fileName in fnmatch.filter(filenames, '*.py'):
+            filenames = [item for item in filenames if item[-3:] == '.py']
+            for fileName in filenames:
                 filePath = os.sep.join((root, fileName))
                 self.filesInfo.append((filePath, os.path.getmtime(filePath)))
 
         changedFiles = tuple(item[0] for item in set(self.filesInfo) - set(self.oldFilesInfo))
-
         return changedFiles
