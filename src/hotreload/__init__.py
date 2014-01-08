@@ -206,3 +206,6 @@ class HotReload(object):
         for filePath in self.files:
             if self.init_module(filePath):
                 self.reload()
+
+    def stop(self):
+        self.fileListener.stop()

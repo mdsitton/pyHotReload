@@ -23,10 +23,14 @@
 
 import os
 import sys
+import time
+import multiprocessing
 try:  # Python 3
     from importlib.machinery import SourceFileLoader
+    from queue import Empty
 except ImportError:  # Python 2
     from imp import load_source
+    from Queue import Empty
 
 # These are functions to help with file related tasks
 
@@ -58,6 +62,36 @@ def load_source_file(pathName, name):
 
     return sys.modules[name]
 
+def checker(path, queue, qin):
+    running = True
+    oldFilesInfo = None
+    filesInfo = []
+
+    while running:
+        try:
+            time.sleep(0.05)
+            
+            del oldFilesInfo
+            oldFilesInfo = filesInfo
+            filesInfo = []
+            
+            for item in path:
+                for root, dirName, filenames in os.walk(item):
+                    for fileName in filenames:
+                        if fileName[-3:] == '.py':
+                            filePath = os.sep.join((root, fileName))
+                            filesInfo.append((filePath, os.path.getmtime(filePath)))
+
+            changedFiles = tuple(item[0] for item in set(filesInfo) - set(oldFilesInfo))
+            if changedFiles and oldFilesInfo:
+                queue.put(changedFiles)
+            
+            try:
+                running = qin.get_nowait()
+            except Empty:
+                running = True
+        except KeyboardInterrupt:
+            pass
 
 class FileChecker(object):
     ''' Track when an if a file has changed '''
@@ -68,25 +102,20 @@ class FileChecker(object):
         if not self.path:
             self.path = (get_path(),)
 
-        self.oldFilesInfo = None
-        self.filesInfo = []
-
-        # Run check once to populate initial values
-        self.check()
+        self.queue = multiprocessing.Queue()
+        self.queueBack = multiprocessing.Queue()
+        self.thread = multiprocessing.Process(target=checker, args=(self.path, self.queue, self.queueBack))
+        self.thread.start()
 
     def check(self):
         ''' Run a check to see if any files have changed.
          '''
+        try:
+            changedFiles = self.queue.get_nowait()
+        except:
+            changedFiles = ()
 
-        del self.oldFilesInfo
-        self.oldFilesInfo = self.filesInfo
-        self.filesInfo = []
-        for path in self.path:
-            for root, dirname, filenames in os.walk(path):
-                filenames = [item for item in filenames if item[-3:] == '.py']
-                for fileName in filenames:
-                    filePath = os.sep.join((root, fileName))
-                    self.filesInfo.append((filePath, os.path.getmtime(filePath)))
-        
-        changedFiles = tuple(item[0] for item in set(self.filesInfo) - set(self.oldFilesInfo))
         return changedFiles
+
+    def stop(self):
+        self.queueBack.put(False)
