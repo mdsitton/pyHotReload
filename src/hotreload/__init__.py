@@ -88,7 +88,7 @@ class HotReload(object):
         code = 'def {}(): pass'.format(name)
         exec_(code, self.moduleInstance.__dict__, None)
 
-        function = getattr(self.moduleInstance, name)
+        function = self.getmoduleattr(name)
         return function
 
     def new_function(self, name, refObject):
@@ -104,13 +104,13 @@ class HotReload(object):
         method.__code__ = refObject.__code__
 
         setattr(parent, name, method)
-        delattr(self.moduleInstance, name)
+        self.delmoduleattr(name)
 
     def new_class(self, name, refObject):
         baseClasses = refObject.__bases__
         newClass = type(name, baseClasses, {})
 
-        setattr(self.moduleInstance, name, newClass)
+        self.setmoduleattr(name, newClass)
         self.update_module_vars()
 
     def update_module_vars(self):
@@ -150,7 +150,16 @@ class HotReload(object):
                 # New Class variable, define it properly
                 elif newClassVar:
                     setattr(orgClass, classTempAttrName, classTemp)
+    
+    def getmoduleattr(self, name):
+        return getattr(self.moduleInstance, name)
 
+    def setmoduleattr(self, name, value):
+        setattr(self.moduleInstance, name, value)
+    
+    def delmoduleattr(self, name):
+        delattr(self.moduleInstance, name)
+        
     def reload(self):
         ''' Reload a python module without replacing it '''
 
@@ -158,7 +167,7 @@ class HotReload(object):
 
             # New Module-Level, create placeholder
             if self.moduleTempAttrName not in self.moduleVars.keys():
-                setattr(self.moduleInstance, self.moduleTempAttrName, None)
+                self.setmoduleattr(self.moduleTempAttrName, None)
                 self.newModuleVar = True
 
             self.moduleAttrObj = self.moduleVars[self.moduleTempAttrName]
@@ -191,7 +200,7 @@ class HotReload(object):
 
                     # New global variable, define it properly
                     elif self.newModuleVar:
-                        setattr(self.moduleInstance, self.moduleTempAttrName, self.moduleTempAttrObj)
+                        self.setmoduleattr(self.moduleTempAttrName, self.moduleTempAttrObj)
 
         # unload temp module
         self.moduleTemp.delete()
