@@ -35,17 +35,14 @@ def exec_(obj, glob, local=None):
         exec(obj, glob, local)
 
 
-class HotReload(object):
-    ''' Facilitates detecting and reloading of any python module located within
-        the folder structure of the first launched script.
-    '''
-
-    def __init__(self, checkPaths=tuple()):
-        self.fileListener = FileChecker(checkPaths)
-        self.files = None
-
+class BaseReload(object):
+    ''' Base reload infrastructure for loading modules, and reloading them. '''
+    
     def default_vars(self):
-
+        '''
+            Reset class variables so that we dont have any potential issues with
+            previous reload cycles interfearing with the next reload
+        '''
         self.newModuleVar = None
 
         self.filePath = None
@@ -63,7 +60,9 @@ class HotReload(object):
         self.moduleTempAttrObj = None
 
     def init_module(self, filePath):
+        ''' Initialise module and temp module from filePath, and setup class for this reload cycle '''
 
+        # Some basic error checking on import
         try:
             self.newModuleVar = False
 
@@ -84,7 +83,7 @@ class HotReload(object):
             return False
 
     def create_function(self, name):
-        ''' Create a function within a module. Then return it.'''
+        ''' Create a function within a module. Then return it. '''
         code = 'def {}(): pass'.format(name)
         exec_(code, self.moduleInstance.__dict__, None)
 
@@ -107,6 +106,8 @@ class HotReload(object):
         self.delmoduleattr(name)
 
     def new_class(self, name, refObject):
+        ''' Create a new class based on another class '''
+
         baseClasses = refObject.__bases__
         newClass = type(name, baseClasses, {})
 
@@ -114,6 +115,10 @@ class HotReload(object):
         self.update_module_vars()
 
     def update_module_vars(self):
+        ''' 
+            Update some variables which are based on a module.
+            This need to be done occasionally when something updates a module.
+        '''
         self.moduleVars = vars(self.moduleInstance)
         self.moduleAttrObj = self.moduleVars[self.moduleTempAttrName]
 
@@ -206,8 +211,18 @@ class HotReload(object):
         self.moduleTemp.delete()
         self.default_vars()
 
+class HotReload(BaseReload):
+    ''' 
+        Standard class for monitoring the file system and triggering 
+        reloads when things are changed
+    '''
+    def __init__(self, checkPaths=tuple()):
+        self.fileListener = FileChecker(checkPaths)
+        self.files = None
+
     def run(self):
-        ''' Check with FileListener if any files have been modified.
+        '''
+            Check with FileListener if any files have been modified.
             Required to be ran in the beginning of the main loop.
          '''
         self.files = self.fileListener.check()
@@ -217,4 +232,5 @@ class HotReload(object):
                 self.reload()
 
     def stop(self):
+        ''' Stop the file listener '''
         self.fileListener.stop()
