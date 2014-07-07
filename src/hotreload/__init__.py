@@ -34,7 +34,6 @@ def exec_(obj, glob, local=None):
     except TypeError:
         exec(obj, glob, local)
 
-
 class BaseReload(object):
     ''' Base reload infrastructure for loading modules, and reloading them. '''
     
@@ -143,7 +142,9 @@ class BaseReload(object):
             hasCode = hasattr(classTemp, '__code__')
 
             # Verify that the variable isnt a builtin attribute
-            if not isinstance(classAttrObj, types.BuiltinFunctionType):
+            if not (isinstance(classAttrObj, types.BuiltinFunctionType) or
+                    isinstance(classAttrObj, types.GetSetDescriptorType) or
+                    classTempAttrName == '__doc__'):
                 # New method, create it
                 if newClassVar and hasCode:
                     self.new_method(classTempAttrName, classTemp, orgClass)

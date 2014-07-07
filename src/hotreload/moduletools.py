@@ -48,7 +48,7 @@ def package_name(path):
     moduleNames = list(sys.modules.keys())
     for item in moduleNames:
         module = sys.modules[item]
-        if hasattr(module, '__file__') and module.__file__ == path:
+        if hasattr(module, '__file__') and (module.__file__ == path or module.__file__ == (path + 'c')):
             return item
     return None
 
