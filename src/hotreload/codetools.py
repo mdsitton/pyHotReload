@@ -21,7 +21,9 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+
 import sys
+import types
 
 try:  # Python 3
     from importlib.machinery import SourceFileLoader
@@ -52,8 +54,49 @@ def package_name(path):
             return item
     return None
 
+
+def calculate_intermed(module):
+    ''' Return dict of user-define vars and objects in module.'''
+    irDict = {}
+    if isinstance(module, types.ModuleType):
+        modVars = vars(module)
+    elif isinstance(module, dict):
+        modVars = module
+
+    for var in modVars:
+        # Skip builtins
+        if isinstance(self.moduleAttrObj, types.BuiltinFunctionType):
+            continue
+
+        try:
+            oldStyleClass = isinstance(self.moduleTempAttrObj, types.ClassType)
+        except AttributeError:
+            oldStyleClass = False
+
+        hasCode = hasattr(self.moduleTempAttrObj, '__code__')
+
+        # Classes
+        if isinstance(modVars[var], type) or oldStyleClass:
+            irClassDict = {}
+            cls = modVars[var]
+            for clsVar in cls:
+                # Skip readonly attributes and built-ins
+                if (clsVar == '__dict__' or clsVar == '__doc__' or
+                        isinstance(cls[clsVar], types.BuiltinFunctionType) or
+                        isinstance(cls[clsVar], types.GetSetDescriptorType)):
+                    continue
+
+                irClassDict[clsVar] = cls[clsVar]
+
+            irDict[var] = irClassDict
+
+        # Global Variables, Functions, Imported Modules
+        else:
+            irDict[var] = modVars[var]
+
+
 class ModuleManager(object):
-    ''' Managing directly dealing with import mechanisms relating to modules'''
+    ''' Manage import mechanisms relating to modules '''
     def __init__(self, filePath, moduleName, displayName):
         self.moduleName = moduleName
         self.filePath = filePath
@@ -68,3 +111,22 @@ class ModuleManager(object):
     def delete(self):
         del self.instance
         del sys.modules[self.displayName]
+
+
+class DiffDict(object):
+    def __init__(self, current, past):
+        self.current = current
+        self.past = past
+
+        self.currentKeySet = set(self.current.keys()) 
+        self.pastKeySet = set(self.past.keys())
+
+        # Returns a set with values common to both
+        # used for calculating added, and removed keys
+        self.common = self.currentKeySet & pastKeySet
+
+    def added(self):
+        return tuple(self.currentKeySet - self.common)
+
+    def removed(self):
+        return tuple(self.pastKeySet - self.common)

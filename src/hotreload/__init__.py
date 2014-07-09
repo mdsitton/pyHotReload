@@ -25,7 +25,7 @@ import sys
 import types
 
 from hotreload.fileutil import get_filename, FileChecker
-from hotreload.moduletools import ModuleManager, package_name
+from hotreload.codetools import ModuleManager, package_name
 
 def exec_(obj, glob, local=None):
     ''' 2.x/3.x compatibility for exec function '''
