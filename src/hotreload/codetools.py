@@ -130,3 +130,7 @@ class DiffDict(object):
 
     def removed(self):
         return tuple(self.pastKeySet - self.common)
+
+    def changed(self):
+        return (k for k in self.common if self.current[k] == self.past[k])
+
