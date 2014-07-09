@@ -131,8 +131,12 @@ class BaseReload(object):
 
         for classTempAttrName in list(classTempVars.keys()):
 
+            if classTempAttrName == '__dict__' or classTempAttrName == '__doc__':
+                continue
+
             # if the class Attribute is new set a temp value for it
             if classTempAttrName not in classVars.keys():
+
                 setattr(orgClass, classTempAttrName, None)
                 newClassVar = True
 
@@ -143,8 +147,7 @@ class BaseReload(object):
 
             # Verify that the variable isnt a builtin attribute
             if not (isinstance(classAttrObj, types.BuiltinFunctionType) or
-                    isinstance(classAttrObj, types.GetSetDescriptorType) or
-                    classTempAttrName == '__doc__'):
+                    isinstance(classAttrObj, types.GetSetDescriptorType) ):
                 # New method, create it
                 if newClassVar and hasCode:
                     self.new_method(classTempAttrName, classTemp, orgClass)
@@ -179,8 +182,14 @@ class BaseReload(object):
             self.moduleAttrObj = self.moduleVars[self.moduleTempAttrName]
             self.moduleTempAttrObj = self.moduleTempVars[self.moduleTempAttrName]
 
+            # Check for old style classes on python 2.7 will crash on 3
+            try:
+                oldStyleClass = isinstance(self.moduleTempAttrObj, types.ClassType)
+            except AttributeError:
+                oldStyleClass = False
+
             # Class Object Found
-            if isinstance(self.moduleTempAttrObj, type):
+            if isinstance(self.moduleTempAttrObj, type) or oldStyleClass:
 
                 # If its a new class create it.
                 if self.newModuleVar:
