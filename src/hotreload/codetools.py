@@ -1,4 +1,4 @@
-﻿# Copyright (c) 2013, Matthew Sitton. 
+﻿# Copyright (c) 2013-2014, Matthew Sitton. 
 # All rights reserved.
 
 # Redistribution and use in source and binary forms, with or without
@@ -20,7 +20,6 @@
 # ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 
 import sys
 import types
@@ -50,7 +49,8 @@ def package_name(path):
     moduleNames = list(sys.modules.keys())
     for item in moduleNames:
         module = sys.modules[item]
-        if hasattr(module, '__file__') and (module.__file__ == path or module.__file__ == (path + 'c')):
+        if hasattr(module, '__file__') and (module.__file__ == path or 
+                                            module.__file__ == (path + 'c')):
             return item
     return None
 
