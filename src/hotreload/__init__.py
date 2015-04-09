@@ -53,11 +53,6 @@ class Reload(object):
         self.moduleVars = vars(moduleInstance)
         self.moduleTempVars = vars(moduleTempInstance)
 
-    def default_vars(self):
-        '''
-            Reset class variables so that we dont have any potential issues with
-            previous reload cycles interfearing with the next reload
-        '''
     def create_function(self, name):
         ''' Create a function within a module. Then return it. '''
         code = 'def {}(): pass'.format(name)
