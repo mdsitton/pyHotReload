@@ -34,52 +34,24 @@ def exec_(obj, glob, local=None):
     except TypeError:
         exec(obj, glob, local)
 
-class BaseReload(object):
-    ''' Base reload infrastructure for loading modules, and reloading them. '''
-    
-    def default_vars(self):
-        '''
-            Reset class variables so that we dont have any potential issues with
-            previous reload cycles interfearing with the next reload
-        '''
+class Reload(object):
+    ''' Reload infrastructure for loading modules, and reloading them. '''
+   
+    def __init__(self, moduleInstance, moduleTempInstance):
         self.newModuleVar = None
 
-        self.filePath = None
-        self.name = None
-        self.module = None
-        self.moduleInstance = None
         self.moduleVars = None
-
-        self.tempName = None
-        self.moduleTemp = None
         self.moduleTempVars = None
 
         self.moduleTempAttrName = None
         self.moduleAttrObj = None
         self.moduleTempAttrObj = None
 
-    def init_module(self, filePath):
-        ''' Initialise module and temp module from filePath, and setup class for this reload cycle '''
+        self.moduleInstance = moduleInstance
+        self.moduleTempInstance = moduleTempInstance
 
-        # Some basic error checking on import
-        try:
-            self.newModuleVar = False
-
-            self.filePath = filePath
-            self.name = package_name(filePath)
-            self.module = ModuleManager(filePath, self.name, self.name)
-            self.moduleInstance = self.module.instance
-            self.moduleVars = vars(self.moduleInstance)
-
-            self.tempName = self.name + '2'
-            self.moduleTemp = ModuleManager(self.filePath, self.name, self.tempName)
-            self.moduleTempVars = vars(self.moduleTemp.instance)
-
-            return True
-        
-        except Exception as e:
-            print (e)
-            return False
+        self.moduleVars = vars(moduleInstance)
+        self.moduleTempVars = vars(moduleTempInstance)
 
     def create_function(self, name):
         ''' Create a function within a module. Then return it. '''
@@ -88,21 +60,18 @@ class BaseReload(object):
 
         function = self.getmoduleattr(name)
         return function
-
-    def new_function(self, name, refObject):
-        ''' Swap code objects with provided refrence '''
+    
+    def new_function(self, name, refObject, parent=None):
+        ''' Create function, and swap code objects from old object, possibly
+            apply it to a parent object.
+        '''
 
         function = self.create_function(name)
         function.__code__ = refObject.__code__
-
-    def new_method(self, name, refObject, parent):
-        ''' Put a method into a different class by swaping code objects '''
-
-        method = self.create_function(name)
-        method.__code__ = refObject.__code__
-
-        setattr(parent, name, method)
-        self.delmoduleattr(name)
+        
+        if parent != None:
+            setattr(parent, name, function)
+            self.delmoduleattr(name)
 
     def new_class(self, name, refObject):
         ''' Create a new class based on another class '''
@@ -150,7 +119,7 @@ class BaseReload(object):
                     isinstance(classAttrObj, types.GetSetDescriptorType) ):
                 # New method, create it
                 if newClassVar and hasCode:
-                    self.new_method(classTempAttrName, classTemp, orgClass)
+                    self.new_function(classTempAttrName, classTemp, parent=orgClass)
 
                 # Update current method
                 elif hasCode:
@@ -217,11 +186,7 @@ class BaseReload(object):
                     elif self.newModuleVar:
                         self.setmoduleattr(self.moduleTempAttrName, self.moduleTempAttrObj)
 
-        # unload temp module
-        self.moduleTemp.delete()
-        self.default_vars()
-
-class HotReload(BaseReload):
+class HotReload(object):
     ''' 
         Standard class for monitoring the file system and triggering 
         reloads when things are changed
@@ -238,8 +203,21 @@ class HotReload(BaseReload):
         self.files = self.fileListener.check()
 
         for filePath in self.files:
-            if self.init_module(filePath):
-                self.reload()
+            print (filePath)
+            try:
+                name = package_name(filePath)
+                module = ModuleManager(filePath, name, name)
+
+                tempName = name + '2'
+                moduleTemp = ModuleManager(filePath, name, tempName)
+
+                relo = Reload(module.instance, moduleTemp.instance)
+                relo.reload()
+
+                moduleTemp.delete()
+
+            except Exception as e:
+                print (e)
 
     def stop(self):
         ''' Stop the file listener '''
