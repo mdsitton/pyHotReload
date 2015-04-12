@@ -32,7 +32,7 @@ class CleanCommand(Command):
 
 
 long_description="""
-pyHotReload allow developers to patch code while running, while still keeping the current state of the program.
+pyHotReload allows developers to patch code while running, while still keeping the current state of the program.
 """
 
 setup(
