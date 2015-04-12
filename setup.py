@@ -29,7 +29,7 @@ class CleanCommand(Command):
                 if not path.startswith(here):
                     # Die if path in CLEAN_FILES is absolute + outside this directory
                     raise ValueError("%s is not a path inside %s" % (path, here))
-                print('removing %s' % path)
+                print('removing %s' % os.path.relpath(path))
                 shutil.rmtree(path)
 
 
