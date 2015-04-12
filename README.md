@@ -1,22 +1,18 @@
-﻿I started this project because i wanted to be able to develop on an application as its running.
-So i have created something that does, since it doesnt seem that anyone has done so in python.
+pyHotReload allows developers to patch code while running, while still keeping the current state of the program.
 
-This is differant from reload() in a few ways. 
+hotreload is differant from reload() in a few ways. The reload built-in only overwrites the previous version of a module in sys.modules. It doesnt change any existing instances which are based on the old objects. The old objects will still be in memory until not refrenced anymore.
 
-The reload built-in defines a new set of objects within sys.modules that replaces the old ones. It doesnt change any existing instances which are based on the old objects. The old objects will still be in memory until not refrenced anymore.
+pyHotReload initializes a copy of the module into another name under sys.modules. The original module, and the new version are compared. Changed objects are then systematically swapped out, or modified so they relect the differance found.
 
-Where as this loads a copy of the module into another name under sys.modules. A quick compairison is done between the original and new is done. Changed objects are then aystematically swapped out, or modified so they relect the differance found.
+In its current alpha state, there will be bugs causing the reloaded module to diverge from what it should be. If you come across something that doesn't work properly please report it.
 
-In its current state, this could cause bugs in the reloaded module. If you come across something, please report it.
-
-Tested in python 2.7.5, 3.3.2 and pypy. Should work on linux also, i've done some limited tests nothing major though.
-
-I've removed the need for a second process to scan for hardware changes. There is a downside though, now the size of the project can now effect performance.
+Tested with python 2.7.5, 3.3.2 and pypy with Windows, OSX, and Linux.
 
 Current to-do list:
-
   * Detect removed objects
   * Look into detecting renamed objects
+  * Verify __slots__ support.
+  * Verify and fix properties.
   * Find bugs
-  * Look into writing unittests
-  * Documentation
+  * Write unittests
+  * Better document the project.
