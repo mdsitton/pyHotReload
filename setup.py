@@ -34,13 +34,13 @@ class CleanCommand(Command):
 
 
 long_description="""
-pyhotreload allows you to patch a system while it is running.
+pyHotReload allow developers to patch code while running, while still keeping the current state of the program.
 """
 
 setup(
     name='pyhotreload',
     version='0.0.1',
-    description='patch a system while its running',
+    description='Patch python code while running.',
     long_description=long_description,
 
     cmdclass={
@@ -50,7 +50,7 @@ setup(
     url='https://github.com/mdsitton/pyHotReload/',
     author='Matthew Sitton',
     author_email='matthewsitton@gmail.com',
-    license='',
+    license='BSD',
 
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
@@ -58,21 +58,21 @@ setup(
         #   3 - Alpha
         #   4 - Beta
         #   5 - Production/Stable
-        'Development Status :: 4 - Beta',
-
-        # Indicate who your project is intended for
+        'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
-        'Topic :: Software Development :: Build Tools',
+        'Topic :: Software Development',
+        'Topic :: Utilities',
 
         # Pick your license as you wish (should match "license" above)
-        #'License :: OSI Approved :: MIT License',
+        'License :: OSI Approved :: BSD License',
 
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
     ],
 
     # What does your project relate to?
-    keywords='hot reload',
+    keywords='hot live reload programming coding',
 
     install_requires=[],
 
