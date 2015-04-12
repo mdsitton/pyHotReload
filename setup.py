@@ -20,8 +20,6 @@ class CleanCommand(Command):
     def finalize_options(self):
         pass
     def run(self):
-        global here
-
         for path_spec in self.CLEAN_FILES:
             # Make paths absolute and relative to this path
             abs_paths = glob.glob(os.path.normpath(os.path.join(here, path_spec)))
