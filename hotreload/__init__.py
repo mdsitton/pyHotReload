@@ -53,6 +53,9 @@ class Reload(object):
         self.moduleVars = vars(moduleInstance)
         self.moduleTempVars = vars(moduleTempInstance)
 
+        self.excludeClass = ('__dict__', '__weakref__', '__doc__')
+        self.excludeModule = ('__name__', '__builtins__', '__package__', '__spec__', '__loader__')
+
     def create_function(self, name):
         ''' Create a function within a module. Then return it. '''
         code = 'def {}(): pass'.format(name)
@@ -100,7 +103,7 @@ class Reload(object):
 
         for classTempAttrName in list(classTempVars.keys()):
 
-            if classTempAttrName == '__dict__' or classTempAttrName == '__doc__':
+            if classTempAttrName in self.excludeClass:
                 continue
 
             # if the class Attribute is new set a temp value for it
@@ -142,6 +145,9 @@ class Reload(object):
         ''' Reload a python module without replacing it '''
 
         for self.moduleTempAttrName in list(self.moduleTempVars.keys()):  # Module Level
+
+            if self.moduleTempAttrName in self.excludeModule:
+                continue
 
             # New Module-Level, create placeholder
             if self.moduleTempAttrName not in self.moduleVars.keys():
@@ -207,6 +213,7 @@ class HotReload(object):
             try:
                 name = package_name(filePath)
                 module = ModuleManager(filePath, name, name)
+                print (name)
 
                 tempName = name + '2'
                 moduleTemp = ModuleManager(filePath, name, tempName)
