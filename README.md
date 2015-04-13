@@ -11,7 +11,7 @@ Tested with python 2.7.5, 3.3.2 and pypy with Windows, OSX, and Linux.
 Current to-do list:
   * Detect removed objects
   * Look into detecting renamed objects
-  * Verify __slots__ support.
+  * Verify \_\_slots\_\_ support.
   * Verify and fix properties.
   * Find bugs
   * Write unittests
